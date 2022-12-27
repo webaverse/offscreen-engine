@@ -30,25 +30,27 @@ const _respond = async (cbUrl, statusCode, contentType, body) => {
   }
 };
 const offscreenEngineManagerApi = async fn => {
-  const url = new URL(location.href);
-  const {searchParams} = url;
-  const funcName = searchParams.get('funcName');
-  const argsUrl = searchParams.get('argsUrl');
-  const cbUrl = searchParams.get('cbUrl');
-  // console.log('offscreen engine api check', {href: location.href, funcName, argsUrl, cbUrl});
-  if (funcName && argsUrl && cbUrl) {
-    // console.log('wait for args', argsUrl);
-    const args = await _getArgs(argsUrl);
+  if (globalThis.location) {
+    const url = new URL(location.href);
+    const {searchParams} = url;
+    const funcName = searchParams.get('funcName');
+    const argsUrl = searchParams.get('argsUrl');
+    const cbUrl = searchParams.get('cbUrl');
+    // console.log('offscreen engine api check', {href: location.href, funcName, argsUrl, cbUrl});
+    if (funcName && argsUrl && cbUrl) {
+      // console.log('wait for args', argsUrl);
+      const args = await _getArgs(argsUrl);
 
-    const opts = {
-      signal: null,
-    };
-    // console.log('wait for func');
-    const result = await fn(funcName, args, opts);
-    const resultUint8Array = zbencode(result);
-    // console.log('wait for respond');
-    await _respond(cbUrl, 200, 'application/octet-stream', resultUint8Array);
-    // console.log('offscreen done');
+      const opts = {
+        signal: null,
+      };
+      // console.log('wait for func');
+      const result = await fn(funcName, args, opts);
+      const resultUint8Array = zbencode(result);
+      // console.log('wait for respond');
+      await _respond(cbUrl, 200, 'application/octet-stream', resultUint8Array);
+      // console.log('offscreen done');
+    }
   }
 };
 export default offscreenEngineManagerApi;
