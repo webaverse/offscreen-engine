@@ -30,7 +30,37 @@ const _respond = async (cbUrl, statusCode, contentType, body) => {
   }
 };
 const offscreenEngineManagerApi = async fn => {
-  if (globalThis.location) {
+  globalThis.addEventListener('message', async e => {
+    const {
+      funcName,
+      args,
+    } = e.data;
+
+    if (typeof funcName === 'string') {
+      const opts = {
+        signal: null,
+      };
+      let error = null, result = null;
+      try {
+        const resultValue = await fn(funcName, args, opts);
+        // result = zbencode(resultValue);
+        result = resultValue;
+        // console.log('wait for respond');
+        // await _respond(cbUrl, 200, 'application/octet-stream', resultUint8Array);
+      } catch (err) {
+        error = err;
+      }
+      globalThis.parent.postMessage({
+        method: 'engineResponse',
+        error,
+        result,
+      }, '*', result?.buffer ? [
+        result.buffer,
+      ] : []);
+    }
+  });
+
+  /* if (globalThis.location) {
     const url = new URL(location.href);
     const {searchParams} = url;
     const funcName = searchParams.get('funcName');
@@ -51,6 +81,6 @@ const offscreenEngineManagerApi = async fn => {
       await _respond(cbUrl, 200, 'application/octet-stream', resultUint8Array);
       // console.log('offscreen done');
     }
-  }
+  } */
 };
 export default offscreenEngineManagerApi;
